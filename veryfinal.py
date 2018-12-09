@@ -1,51 +1,34 @@
 #!/usr/bin/env python
-
- #Cells use one of two methods to break down glucose and produce ATP, efficient aerobic pathway that requires oxygen or using glycolysis, an inefficient anaerobic pathway.
- #Glycolysis is the metabolic process of breaking down carbohydrates, such as glucose, and making enzymes & ATP. Glycolysis is part of the anaerobic pathway and is used when oxygen levels are too low and cannot support the level of ATP being produced
- #The model assumes that cells have a target level of ATP demand. The model is testing what happens to cells under anaerobic conditions (glycolysis), during ten geenrations, depending on the ATP levels produced.
-
-
 import matplotlib.pyplot as plt
-#class for the equations in the simulation.
-class equations:
-    def __init__(self,Pg):
-        self.Pg=Pg
-    def cellfate(self):
 
-        #equation for oxygen concentration
+import numpy as np
+#equation for oxygen concentration
 #Oxygen consumption determines oxygen concentration (which determines if cells use glycolysis or areobic pathway)
-        Vo=0.012
-        O=0.056
-        Ko=0.05
-        Fo=Vo*(O/(O+Ko))
+Vo=0.012
+O=0.056
+Ko=0.05
+Fo=Vo*(O/(O+Ko))
 #ATP levels are determined by glucose consumption and oxygen concentration
 #Oxygen consumption fO is determined by oxygen concentration (cells use glycolysis or areobic pathway)
 #since the cells are using glycolysis, oxygen con is low/near zero. Shows oxygen concentration is insufficient and cells will use glycolysis to produce ATP
-
-        #equation for glucose concentration
 #Cells uses glucose to produce ATP, but glycolysis is an insuffiecient way of producing ATP (2 ATP per glucose molecule broken down)
 #Glucose consumption is driven by the need to meet ATP demand.
-#pG is a multiplier representing the altered glucose metabolism seen in many tumor cells (i.e., the Warburg effect), G is the amount of glucose, Kg is the half-max concentration of glucose, pG
-
-import numpy as np
-	pG=np.linspace(start=0,stop=100, num=100)
-#pG is the variable for glucose intake within a cell. This value is used in the equation Fg to find  that can later be used to control amount of ATp and Hydrogen produced that we will see in later equations
+#Pg determines the rates of glycolysis
+Pg=np.linspace(start=0,stop=100, num=100)
 #our numpy list  is written to give off a list of 100 generations of numbers ranging from 0 to 100
-# for a healthy cell a value of 1  glucose intake yields a healthy amount of ATp production and no hydrogen production allowing the  cell to simply reproduce
+# for a healthy cell a value of 1  glycolysis rate yields a healthy amount of ATp production and no hydrogen production allowing the  cell to simply reproduce
 #for our cancer cells since we are getting values greater than 1  our cells will act as cancerous yielding an unhealthy amount of ATP and thus overproduction of hydrogen killing the cells
-
-        Ao=0.1
-        G=5
-        Kg=0.04
-        Fg=-(((pG*0.1/2)+(27*Fo/10))*(5/(5+0.04)))
-       #equation for ATP production
-        Kh=0.00025
-        self.Fa=-(2*Fg+(27*Fo/5))
-	Fa=-(2*Fg+(27*Fo/5))
+#equation for glucose consumption
+Ao=0.1
+G=5
+Kg=0.04
+Fg=-(((Pg*0.1/2)+(27*Fo/10))*(5/(5+0.04)))
+#equation for ATP production
+Kh=0.00025
+Fa=-(2*Fg+(27*Fo/5))
 #Creates scatterplot showing correlation between ATP production and percent of glucose inside of cancer cell
-import matplotlib.pyplot as plt
 
-plt.scatter(pG, Fa, label='Amount of ATP produces', color='c', marker='^')
+plt.scatter(Pg, Fa, label='Amount of ATP produces', color='c', marker='^')
 
 plt.xlabel('glucose intake') 
 plt.ylabel('ATP production')
@@ -53,127 +36,182 @@ plt.title('ATP vs glucose intake')
 plt.legend()
 plt.show()
 
-        #equation for Hydrogen ion production
-        self.Fh=Kh*((29*(self.pG*Vo + Fo))/5)
+#equation for Hydrogen ion production
+kH = 0.0002
+Vo =0.012
+Fh=Kh*((29*(Pg*Vo + Fo))/5)
 #Proton production, Fh, is linked to the amount of glycolysis that does not feed the aerobic pathway
 #equation for proton prd
-  if self.Fa >= 0.8
-        print('This is a normal cell and would go through cyclic acid cycle')
-else
-       self.Fa <= 0.3:
-
-
-        kH = 0.00025
-        pG = pG
-        Vo =0.012
-        fo = fo
-
-        return Fh=kH*((29*(pG*Vo + Fo))/5)
 #This creates the scatter plot showing the coorelation between hydrogen production and glucose consumption of cancer cells
-import matplotlib.pyplot as plt
-
-plt.scatter(pG, Fh, label='Amount of hydrogen produces', color='b', marker='^')
+plt.scatter(Pg, Fh, label='Amount of hydrogen produces', color='b', marker='^')
 
 plt.xlabel('glucose intake')
 plt.ylabel('Hydrogen production')
 plt.title('Hydrogen vs glucose intake')
 plt.legend()
 plt.show()
-
-
-#class that simulates the glycolytic pathway.
-#The rate of glycolysis(Pg varies)
-class glycolyticpathway(equations):
-    def __init__(self,Cellnumbers,generations,Pg):
+#create class 'equations' for the simulation of different PGs(glycolysis rates)
+class equations:
+    def __init__(self,Pg):
+        self.Pg=Pg
+#create a method with the equations which will be used in a latter class for simulation of the fate of the cells.
+    def cellfate(self):
+        #equation for gluco concentration
+        Fg=-(((self.Pg*0.1/2)+(27*Fo/10))*(5/(5+0.04)))
+       #equation for ATP production
+        self.Fa=-(2*Fg+(27*Fo/5))
+        #equation for Hydrogen ion production
+        self.Fh=Kh*((29*(self.Pg*Vo + Fo))/5)
+#create a class that simulates cancer cells that have higher PGs or glycolytic levels.
+class glycolyticpathway:
+    def __init__(self,Cellnumbers,generations):
         self.Cellnumbers=Cellnumbers
         self.generations= generations
-        self.Pg=Pg
-#method to simulate cell increase or decrease
     def cellfate (self):
-        equations.cellfate(self)
+#define the parameters at the beginning of the simulation
         self.Cellnumbers=[10]
         self.generations=10
-#selection of cells depending on ATP production and hydrogen ion concentration
-#ATP production determines the behavior of the cell
-#ATP demand is higher for cancer cells than in a normal cell, so ATP production has to be higher in order for cell to reproduce
-#ATP provides cells with energy, but a certain amount of ATP has to be produced to allow cells to survive and reproduce, when ATP production is greater than 0.8, the cell has enough energy for reproduction, if ATP production is between 0.8 and 0.3, the cell doesn't have enough energy to reproduce,but it does have enough energy to survive. If ATP production is less than 0.3, the cell will not be able to survive and will die 
-
-       for gen in range(self.generations):
-#cells die
+#select randomly 3 Pg values to simulate
+        Pgr=np.random.choice(Pg,3)
+#convert the numpy array into a list
+        Pgr=Pgr.tolist()
+#convert floats in the list into integers
+        Pgr = [int(x) for x in Pgr]
+#select the first value from the list to simulate
+        Pgr1=Pgr[0]  
+        print ("Pg1:",Pgr1)
+#calculate ATP and hydrogen ion production with new Pg
+        Fg=-(((Pgr1*0.1/2)+(27*Fo/10))*(5/(5+0.04)))
+        self.Fa=-(2*Fg+(27*Fo/5))
+        self.Fh=Kh*((29*(Pgr1*Vo + Fo))/5)
+#for assigned generations select the fate of cells based on ATP and hydrogen ion concentrations
+        for gen in range(self.generations):
+#cells die with high hydrogen ion concentration
             if self.Fh >= 3:
                 NewCellnumber=0
 #cells double
             elif self.Fa >0.3 and self.Fa <4:
                 NewCellnumber=self.Cellnumbers[-1]*2
-#cells quiescent
+#cells remain quiescent
             elif self.Fa >= 0.1:
                 NewCellnumber=self.Cellnumbers[-1]
-#cells die
             elif self.Fa <= 0.1:
+#cells die with too little ATP
                 NewCellnumber=0
-#put all cell numbers in a list
+#create new list for cellnumbers across all generations
             self.Cellnumbers.append(NewCellnumber)
+#print out the numbers generated
         print("Number of cells",self.Cellnumbers)
         print("ATP produced",self.Fa)
         print("Number of Hydrogen ions produced",self.Fh)
-        #return self.Cellnumbers
-    #def plotgraph (self):
-        #plt.plot(self.Cellnumbers)
-#plot cell numbers graph
+#select the first value from the list to simulate
+        Pgr2=Pgr[1]
+        print ("Pg2:", Pgr2)
+#calculate ATP and hydrogen ion production with new Pg
+        Fg=-(((Pgr2*0.1/2)+(27*Fo/10))*(5/(5+0.04)))
+        self.Fa=-(2*Fg+(27*Fo/5))
+        self.Fh=Kh*((29*(Pgr2*Vo + Fo))/5)
+        self.Cellnumbers2=[10]
+#for assigned generations select the fate of cells based on ATP and hydrogen ion concentrations
+        for gen in range(self.generations):
+#cells die with high hydrogen ion concentration
+            if self.Fh >= 3:
+                NewCellnumber=0
+#cells double
+            elif self.Fa >0.3 and self.Fa <4:
+                NewCellnumber=self.Cellnumbers2[-1]*2
+#cells remain quiescent
+            elif self.Fa >= 0.1:
+                NewCellnumber=self.Cellnumbers2[-1]
+#cells die with too little ATP
+            elif self.Fa <= 0.1:
+                NewCellnumber=0
+#append  cell numbers to a new list
+            self.Cellnumbers2.append(NewCellnumber)
+#print out the numbers
+        print("Number of cells",self.Cellnumbers2)
+        print("ATP produced",self.Fa)
+        print("Number of Hydrogen ions produced",self.Fh)
+#select the second value from the list to simulate
+        Pgr3=Pgr[2]
+        print ("Pg3:", Pgr3)
+#calculate ATP and hydrogen ion production with new Pg
+        Fg=-(((Pgr3*0.1/2)+(27*Fo/10))*(5/(5+0.04)))
+        self.Fa=-(2*Fg+(27*Fo/5))
+        self.Fh=Kh*((29*(Pgr3*Vo + Fo))/5)
+        self.Cellnumbers3=[10]
+#for assigned generations select the fate of cells based on ATP and hydrogen ion concentrations
+        for gen in range(self.generations):
+#cells die with high hydrogen ion concentration
+            if self.Fh >= 3:
+                NewCellnumber=0
+#cells double
+            elif self.Fa >0.3 and self.Fa <4:
+                NewCellnumber=self.Cellnumbers3[-1]*2
+#cells remain quiescent
+            elif self.Fa >= 0.1:
+                NewCellnumber=self.Cellnumbers3[-1]
+#cells die with too little ATP
+            elif self.Fa <= 0.1:
+                NewCellnumber=0
+#append the numbers into a new list
+            self.Cellnumbers3.append(NewCellnumber)
+#print out the numbers
+        print("Number of cells",self.Cellnumbers3)
+        print("ATP produced",self.Fa)
+        print("Number of Hydrogen ions produced",self.Fh)
+#plot all 3 plots on the same figure
         fig, ax = plt.subplots()
         ax.plot(self.Cellnumbers)
-        ax.set_ylim (0,6000)
+        ax.plot(self.Cellnumbers2)
+        ax.plot(self.Cellnumbers3)
+        ax.legend(['Pg1','Pg2','Pg3'])
+        ax.set_ylim (0,500)
         ax.set_title('Number of cancer cells in  glycolytic pathway')
         ax.set_ylabel('Number of cells')
         ax.set_xlabel('Number of cell divisions')
         plt.show()
-#new class in nonglycolytic pathway i.e normal cell glycolysis levels
+#create a new class simulating normal cells with minimal glycolytic levels
 class nonglycolyticpathway(equations):
     def __init__(self,Cellnumbers,generations,Pg):
         self.Cellnumbers=Cellnumbers
         self.generations= generations
         self.Pg=Pg
-#method to select cells for increase or decrease
     def cellfate (self):
         equations.cellfate(self)
+#set the new parameters
         self.Cellnumbers=[10]
         self.generations=10
-#selection of cells depending on ATP production or Hydrogen concentration
+#for each generation calculate the new cell nmbers
         for gen in range(self.generations):
-#cells die
+#with high hydrogen ion concentrations cells die
             if self.Fh >= 3:
                 NewCellnumber=0
-#cells double
+#with optimum ATP cells will double
             elif self.Fa >0.3 and self.Fa <4:
                 NewCellnumber=self.Cellnumbers[-1]*2
-#cells quiescent
+#cells remain quiscent
             elif self.Fa >= 0.1:
                 NewCellnumber=self.Cellnumbers[-1]
-#cells die
+#cells die with low ATP
             elif self.Fa <= 0.1:
                 NewCellnumber=0
+#append cellnumbers into a list
             self.Cellnumbers.append(NewCellnumber)
+#print out the values
         print("Number of cells",self.Cellnumbers)
         print("ATP produced",self.Fa)
         print("Number of Hydrogen ions produced",self.Fh)
-   #def plotgraph (self):
-       #plt.plot(self.Cellnumbers)
- #plot the graphs for  cell numbers
+#plot the graph for nonglycolytic pathway
         fig, ax = plt.subplots()
         ax.plot(self.Cellnumbers)
-        ax.set_ylim (0,6000)
+        ax.set_ylim (0,500)
         ax.set_title('Number of cancer cells in  non-glycolytic pathway')
         ax.set_ylabel('Number of cells')
         ax.set_xlabel('Number of cell divisions')
-        plt.show()
-#different simulations with different Pg numbers
-sim1=nonglycolyticpathway(10,10,1)
+    plt.show()
+#simulations for non-glycolytic and glycolytic pathways
+sim1=nonglycolyticpathway(10,10,2)
 sim1.cellfate()
-sim2=glycolyticpathway(10,10,3)
+sim2=glycolyticpathway(10,10)
 sim2.cellfate()
-sim3=glycolyticpathway(10,10,10)
-sim3.cellfate()
-sim4=glycolyticpathway(10,10,20)
-sim4.cellfate()
-sim5=glycolyticpathway(10,10,100)
-sim5.cellfate()
